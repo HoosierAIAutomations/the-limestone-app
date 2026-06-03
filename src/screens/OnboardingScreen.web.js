@@ -58,10 +58,10 @@ export default function OnboardingScreen() {
   const isDesktop = width > 900;
   
   // Dimensions math
-  const cardWidth = isDesktop ? 1050 : Math.min(width - 32, 500);
+  const cardWidth = isDesktop ? 1050 : width;
   const leftWidth = isDesktop ? 420 : 0;
-  const rightWidth = isDesktop ? 630 : cardWidth;
-  const cardHeight = isDesktop ? 640 : 'auto';
+  const rightWidth = isDesktop ? 630 : width;
+  const cardHeight = isDesktop ? 640 : '100%';
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [firstName, setFirstName] = useState('');
@@ -126,71 +126,67 @@ export default function OnboardingScreen() {
           { 
             width: cardWidth, 
             height: cardHeight,
+            borderRadius: isDesktop ? 24 : 0,
+            shadowOpacity: isDesktop ? 0.2 : 0,
+            elevation: isDesktop ? 4 : 0,
             flexDirection: isDesktop ? 'row' : 'column'
           }
         ]}>
           
           {/* ────────────────────────────────────────────────────────
-             STATIC BRANDING PANEL (Left on Desktop, Top on Mobile)
+             STATIC BRANDING PANEL (Left on Desktop, Hidden on Mobile)
              ──────────────────────────────────────────────────────── */}
-          <View style={[
-            styles.leftBrandPane, 
-            { 
-              width: isDesktop ? leftWidth : '100%',
-              padding: isDesktop ? 40 : 20,
-              flexDirection: isDesktop ? 'column' : 'row',
-              alignItems: 'center',
-              justifyContent: isDesktop ? 'space-between' : 'flex-start',
-              borderBottomLeftRadius: isDesktop ? 24 : 0,
-              borderTopRightRadius: isDesktop ? 0 : 24,
-            }
-          ]}>
+          {isDesktop && (
             <View style={[
-              styles.brandingContent, 
+              styles.leftBrandPane, 
               { 
-                flexDirection: isDesktop ? 'column' : 'row', 
+                width: leftWidth,
+                padding: 40,
+                flexDirection: 'column',
                 alignItems: 'center',
-                flex: isDesktop ? 1 : 0,
-                width: isDesktop ? '100%' : 'auto',
+                justifyContent: 'space-between',
+                borderBottomLeftRadius: 24,
+                borderTopRightRadius: 0,
               }
             ]}>
               <View style={[
-                styles.logoSquareWrapper,
-                !isDesktop && { width: 90, height: 90, borderRadius: 12, borderWidth: 1, borderColor: '#000000', marginRight: 16, marginBottom: 0 }
+                styles.brandingContent, 
+                { 
+                  flexDirection: 'column', 
+                  alignItems: 'center',
+                  flex: 1,
+                  width: '100%',
+                }
               ]}>
-                <Image 
-                  source={require('../../assets/logo-app-ready.jpg')} 
-                  style={[
-                    styles.appLogo,
-                    !isDesktop && { width: 88, height: 88, borderRadius: 10 }
-                  ]} 
-                  resizeMode="contain"
-                />
+                <View style={styles.logoSquareWrapper}>
+                  <Image 
+                    source={require('../../assets/logo-app-ready.jpg')} 
+                    style={styles.appLogo} 
+                    resizeMode="contain"
+                  />
+                </View>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={styles.brandTitle}>The Limestone</Text>
+                  <Text style={[
+                    styles.brandDesc, 
+                    { marginTop: 12 }
+                  ]}>
+                    Preserving Community Connection, Supporting Local Businesses, and Sharing Live Advisories Across Bedford and the Surrounding County of Lawrence.
+                  </Text>
+                </View>
               </View>
-              <View style={{ alignItems: isDesktop ? 'center' : 'flex-start', flex: isDesktop ? 0 : 1 }}>
-                <Text style={[styles.brandTitle, !isDesktop && { fontSize: 20, textAlign: 'left' }]}>The Limestone</Text>
-                <Text style={[
-                  styles.brandDesc, 
-                  { marginTop: isDesktop ? 12 : 4 },
-                  !isDesktop && { textAlign: 'left', fontSize: 11, lineHeight: 14, paddingHorizontal: 0 }
-                ]}>
-                  Preserving Community Connection, Supporting Local Businesses, and Sharing Live Advisories Across Bedford and the Surrounding County of Lawrence.
-                </Text>
-              </View>
-            </View>
-            
-            {isDesktop && (
+              
               <View style={{ alignItems: 'center', width: '100%', marginTop: 20 }}>
                 <Text style={styles.brandFooter}>© 2026 Hoosier AI Automations LLC</Text>
                 <Text style={styles.brandFooterArtwork}>Artwork By: Rikku I. | All Rights Reserved</Text>
               </View>
-            )}
-          </View>
+            </View>
+          )}
 
           {/* ────────────────────────────────────────────────────────
              RIGHT PANE: WALKTHROUGH SLIDES
              ──────────────────────────────────────────────────────── */}
-          <View style={[styles.rightSlidesPane, { width: rightWidth }]}>
+          <View style={[styles.rightSlidesPane, { width: rightWidth, flex: isDesktop ? 0 : 1 }]}>
             <ScrollView
               ref={scrollViewRef}
               horizontal
@@ -297,7 +293,7 @@ export default function OnboardingScreen() {
             </ScrollView>
 
             {/* Footer Navigation Controls */}
-            <View style={[styles.footerRow, !isDesktop && { flexDirection: 'column', alignItems: 'stretch' }]}>
+            <View style={[styles.footerRow, { paddingBottom: isDesktop ? 0 : 20 }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                 {/* Paging Dots */}
                 <View style={styles.dotsRow}>
@@ -329,13 +325,6 @@ export default function OnboardingScreen() {
                   />
                 </TouchableOpacity>
               </View>
-
-              {!isDesktop && (
-                <View style={{ alignItems: 'center', marginTop: 16 }}>
-                  <Text style={styles.brandFooter}>© 2026 Hoosier AI Automations LLC</Text>
-                  <Text style={styles.brandFooterArtwork}>Artwork By: Rikku I. | All Rights Reserved</Text>
-                </View>
-              )}
             </View>
           </View>
 
