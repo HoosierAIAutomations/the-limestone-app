@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, StatusBar } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, StatusBar, useWindowDimensions } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,8 +36,11 @@ function DirectoryStackScreen() {
 // Custom Top Header Navigation for Web
 function WebHeader({ navigation, route }) {
   const { colors, profile, getAvatarDetails } = useAppContext();
+  const styles = getStyles(colors);
   const avatar = getAvatarDetails();
   const activeRouteName = route ? route.name : 'Home';
+  const { width } = useWindowDimensions();
+  const isDesktop = width > 900;
 
   const navItems = [
     { name: 'Home', icon: 'home-outline', label: 'Home' },
@@ -47,7 +50,7 @@ function WebHeader({ navigation, route }) {
   ];
 
   return (
-    <View style={[styles.headerContainer, { backgroundColor: colors.cardSurface, borderBottomColor: colors.border }]}>
+    <View style={[styles.headerContainer, { backgroundColor: colors.cardSurface, borderBottomColor: colors.border, paddingHorizontal: isDesktop ? 24 : 16 }]}>
       {/* Left: Brand Logo */}
       <TouchableOpacity 
         style={styles.logoWrapper} 
@@ -59,38 +62,40 @@ function WebHeader({ navigation, route }) {
         </Text>
       </TouchableOpacity>
 
-      {/* Center: Navigation Links */}
-      <View style={styles.navLinks}>
-        {navItems.map((item) => {
-          const isActive = activeRouteName === item.name;
-          return (
-            <TouchableOpacity
-              key={item.name}
-              style={[
-                styles.navLinkItem,
-                isActive && { borderBottomColor: colors.primary, borderBottomWidth: 2 }
-              ]}
-              onPress={() => navigation.navigate(item.name)}
-            >
-              <Ionicons 
-                name={isActive ? item.icon.replace('-outline', '') : item.icon} 
-                size={16} 
-                color={isActive ? colors.primary : colors.textSecondary} 
-                style={{ marginRight: 6 }}
-              />
-              <Text 
+      {/* Center: Navigation Links (Only shown on Desktop) */}
+      {isDesktop && (
+        <View style={styles.navLinks}>
+          {navItems.map((item) => {
+            const isActive = activeRouteName === item.name;
+            return (
+              <TouchableOpacity
+                key={item.name}
                 style={[
-                  styles.navLinkLabel, 
-                  { color: isActive ? colors.primary : colors.textSecondary },
-                  isActive && { fontWeight: '800' }
+                  styles.navLinkItem,
+                  isActive && { borderBottomColor: colors.primary, borderBottomWidth: 2 }
                 ]}
+                onPress={() => navigation.navigate(item.name)}
               >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+                <Ionicons 
+                  name={isActive ? item.icon.replace('-outline', '') : item.icon} 
+                  size={16} 
+                  color={isActive ? colors.primary : colors.textSecondary} 
+                  style={{ marginRight: 6 }}
+                />
+                <Text 
+                  style={[
+                    styles.navLinkLabel, 
+                    { color: isActive ? colors.primary : colors.textSecondary },
+                    isActive && { fontWeight: '800' }
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
 
       {/* Right: Citizen Hub Trigger */}
       <TouchableOpacity 
@@ -104,26 +109,55 @@ function WebHeader({ navigation, route }) {
             <Ionicons name={avatar.icon} size={12} color="#FFFFFF" />
           )}
         </View>
-        <Text style={[styles.hubTriggerText, { color: colors.textPrimary }]}>
-          {profile.name.split(' ')[0]}'s Hub
-        </Text>
-        <Ionicons name="chevron-down-outline" size={12} color={colors.textSecondary} style={{ marginLeft: 6 }} />
+        {isDesktop && (
+          <Text style={[styles.hubTriggerText, { color: colors.textPrimary }]}>
+            {profile.name.split(' ')[0]}'s Hub
+          </Text>
+        )}
+        {isDesktop && <Ionicons name="chevron-down-outline" size={12} color={colors.textSecondary} style={{ marginLeft: 6 }} />}
       </TouchableOpacity>
     </View>
   );
 }
 
-// Bottom Tab Navigator Setup (Hides bottom tab and renders header instead)
+// Bottom Tab Navigator Setup (Responsive bottom tab / header)
 function MainTabs() {
   const { colors } = useAppContext();
+  const { width } = useWindowDimensions();
+  const isDesktop = width > 900;
+  const styles = getStyles(colors);
 
   return (
     <Tab.Navigator
-      tabBar={() => null}
-      screenOptions={{
+      tabBar={isDesktop ? () => null : undefined}
+      screenOptions={({ route }) => ({
         headerShown: true,
         header: (props) => <WebHeader {...props} />,
-      }}
+        tabBarShowLabel: true,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarLabelStyle: styles.tabBarLabel,
+        tabBarStyle: isDesktop ? { display: 'none' } : styles.tabBarStyle,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Directory') {
+            iconName = focused ? 'business' : 'business-outline';
+          } else if (route.name === 'Resources') {
+            iconName = focused ? 'heart-half' : 'heart-half-outline';
+          } else if (route.name === 'Community') {
+            iconName = focused ? 'calendar' : 'calendar-outline';
+          }
+
+          return (
+            <View style={focused ? styles.activeIconWrapper : null}>
+              <Ionicons name={iconName} size={focused ? 23 : 22} color={color} />
+            </View>
+          );
+        },
+      })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Directory" component={DirectoryStackScreen} />
@@ -169,7 +203,7 @@ export default function AppNavigator() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors) => StyleSheet.create({
   headerContainer: {
     height: 72,
     flexDirection: 'row',
@@ -227,5 +261,24 @@ const styles = StyleSheet.create({
   hubTriggerText: {
     fontSize: 13,
     fontWeight: '700',
+  },
+  tabBarStyle: {
+    backgroundColor: colors.cardSurface,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    height: 82,
+    paddingTop: 10,
+    paddingBottom: 22,
+    position: 'relative',
+    ...SHADOWS.medium,
+  },
+  tabBarLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  activeIconWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
